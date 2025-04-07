@@ -10,7 +10,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	_ "github.com/lib/pq"
 
-	// If your module name is:
 	"github.com/AdityaKumar0927/setup/go-graphql-service/graph"
 )
 
@@ -31,9 +30,6 @@ func main() {
 	}
 
 	schema := graph.NewExecutableSchema(db)
-
-	// If the generics cause trouble, remove the cache line or match the type:
-	// schema.SetQueryCache(lru.New) // or remove if it won't infer
 
 	http.Handle("/query", schema)
 	http.Handle("/", playground.Handler("GraphQL Playground", "/query"))
