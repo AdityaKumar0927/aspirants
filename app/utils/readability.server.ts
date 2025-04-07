@@ -1,11 +1,11 @@
 // app/utils/readability.server.ts
+import { Readability } from "@mozilla/readability"
 import { JSDOM } from "jsdom"
-import { Readability } from "mozilla-readability"
 
-export function parseContentWithReadability(url: string, html: string): string {
-  const dom = new JSDOM(html)
-  const doc = dom.window.document
-  const reader = new Readability(url, doc)
-  const parsed = reader.parse()
-  return parsed?.textContent || "No content extracted."
+export function parseContentWithReadability(url: string, html: string) {
+  const doc = new JSDOM(html, { url })
+  const reader = new Readability(doc.window.document)
+  const result = reader.parse()
+  if (!result) return ""
+  return result.textContent
 }
