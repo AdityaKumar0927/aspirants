@@ -6,7 +6,9 @@ import { supabaseAdmin } from "~/utils/supabase.server";
 import { redisClient } from "~/utils/redis.server";
 import { openai } from "~/utils/openai.server";
 import { JSDOM } from "jsdom";
-import { Readability } from "readability";
+import readabilityImport from "readability";
+
+const { Readability } = readabilityImport;
 
 export const loader: LoaderFunction = async () => {
   const { data: uploads } = await supabaseAdmin
@@ -14,6 +16,7 @@ export const loader: LoaderFunction = async () => {
     .select("*")
     .order("created_at", { ascending: false })
     .limit(5);
+
   return { uploads: uploads ?? [] };
 };
 
@@ -23,23 +26,28 @@ export const action: ActionFunction = async ({ request }) => {
   if (!url) {
     return { error: "No URL provided." };
   }
+
   const { data: upData, error: upErr } = await supabaseAdmin
     .from("user_uploads")
     .insert([{ url, file_type: "web", original_name: url }])
     .select("id")
     .single();
+
   if (upErr || !upData) {
     return { error: "Could not insert user_upload." };
   }
   const uploadId = upData.id;
+
   const resp = await fetch(url);
   if (!resp.ok) {
     return { error: `Failed to fetch URL: ${resp.statusText}` };
   }
   const html = await resp.text();
+
   const dom = new JSDOM(html, { url });
   const parsed = new Readability(dom.window.document).parse();
   const mainText = parsed?.textContent || "No content extracted.";
+
   const completion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
@@ -48,6 +56,7 @@ export const action: ActionFunction = async ({ request }) => {
     ]
   });
   const summary = completion.choices?.[0]?.message?.content?.trim() ?? "";
+
   let orderIndex = 0;
   const { error: fragErr } = await supabaseAdmin
     .from("content_fragments")
@@ -65,9 +74,11 @@ export const action: ActionFunction = async ({ request }) => {
         order_index: orderIndex++
       }
     ]);
+
   if (fragErr) {
     return { error: `Error storing fragments: ${fragErr.message}` };
   }
+
   await redisClient.set(`uploadStatus:${uploadId}`, "processed");
   return redirect(`/parse/${uploadId}`);
 };
@@ -75,6 +86,7 @@ export const action: ActionFunction = async ({ request }) => {
 export default function UploadPage() {
   const { uploads } = useLoaderData<typeof loader>();
   const actionData = useActionData() as { error?: string };
+
   return (
     <div className="min-h-screen p-6 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white">
       <h1 className="text-3xl font-bold mb-4">Upload or Parse a URL</h1>
