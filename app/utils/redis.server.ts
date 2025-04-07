@@ -1,3 +1,4 @@
+// app/utils/redis.server.ts
 import { Redis } from "@upstash/redis";
 
 export const redisClient = new Redis({
