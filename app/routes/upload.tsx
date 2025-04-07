@@ -19,33 +19,34 @@ export const loader: LoaderFunction = async () => {
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const url = formData.get("url")?.toString()?.trim();
-  if (!url) return { error: "No URL provided." };
+  if (!url) {
+    return { error: "No URL provided." };
+  }
 
   const { data: upData, error: upErr } = await supabaseAdmin
     .from("user_uploads")
     .insert([{ url, file_type: "web", original_name: url }])
     .select("id")
     .single();
-
   if (upErr || !upData) {
     return { error: "Could not insert user_upload." };
   }
-  const uploadId = upData.id;
 
+  const uploadId = upData.id;
   const resp = await fetch(url);
   if (!resp.ok) {
     return { error: `Failed to fetch URL: ${resp.statusText}` };
   }
   const html = await resp.text();
 
-  // Use the polyfilled parse function
+  // Now use mozilla-readability
   const mainText = parseContentWithReadability(url, html);
 
   const completion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
       { role: "system", content: "You are a helpful summarizer." },
-      { role: "user", content: `Summarize the text:\n${mainText}` }
+      { role: "user", content: `Summarize:\n${mainText}` }
     ]
   });
   const summary = completion.choices?.[0]?.message?.content?.trim() ?? "";
@@ -67,6 +68,7 @@ export const action: ActionFunction = async ({ request }) => {
         order_index: orderIndex++
       }
     ]);
+
   if (fragErr) {
     return { error: `Error storing fragments: ${fragErr.message}` };
   }
@@ -104,7 +106,10 @@ export default function UploadPage() {
       <h3 className="text-xl font-semibold mb-2">Recent Uploads</h3>
       <ul className="space-y-2">
         {uploads.map((u: any) => (
-          <li key={u.id} className="border border-gray-300 dark:border-gray-700 p-2 rounded">
+          <li
+            key={u.id}
+            className="border border-gray-300 dark:border-gray-700 p-2 rounded"
+          >
             {u.url || u.file_path}
           </li>
         ))}

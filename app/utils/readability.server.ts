@@ -1,16 +1,12 @@
+// app/utils/readability.server.ts
 import { JSDOM } from "jsdom";
-import readabilityDefault from "readability";
+import { Readability } from "mozilla-readability";
 
-const { Readability } = readabilityDefault;
+export function parseContentWithMozillaReadability(url: string, html: string): string {
+  const dom = new JSDOM(html);
+  const doc = dom.window.document;
 
-export function parseContentWithReadability(url: string, html: string): string {
-  const dom = new JSDOM(html, { url });
-
-  // Added so polyfill HTMLFrameElement so readability doesn't crash
-  if (typeof dom.window.HTMLFrameElement === "undefined") {
-    (dom.window as any).HTMLFrameElement = class {};
-  }
-
-  const parsed = new Readability(dom.window.document).parse();
+  const reader = new Readability(url, doc);
+  const parsed = reader.parse();
   return parsed?.textContent || "No content extracted.";
 }
