@@ -12,6 +12,7 @@ export const loader: LoaderFunction = async () => {
     .select("*")
     .order("created_at", { ascending: false })
     .limit(5)
+
   return { uploads: uploads ?? [] }
 }
 
@@ -21,13 +22,14 @@ export const action: ActionFunction = async ({ request }) => {
   if (!url) {
     return { error: "No URL provided." }
   }
+
   const { data: upData, error: upErr } = await supabaseAdmin
     .from("user_uploads")
     .insert([{ url, file_type: "web", original_name: url }])
     .select("id")
     .single()
 
-  console.log("Supabase insert error:", upErr)
+  console.log("[Supabase Insert Error]:", upErr)
 
   if (upErr || !upData) {
     return { error: "Could not insert user_upload." }
@@ -65,9 +67,11 @@ export const action: ActionFunction = async ({ request }) => {
         order_index: orderIndex++
       }
     ])
+
   if (fragErr) {
     return { error: `Error storing fragments: ${fragErr.message}` }
   }
+
   await redisClient.set(`uploadStatus:${uploadId}`, "processed")
   return redirect(`/parse/${uploadId}`)
 }
