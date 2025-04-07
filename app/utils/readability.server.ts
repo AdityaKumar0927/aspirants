@@ -1,9 +1,9 @@
 // app/utils/readability.server.ts
 import { JSDOM } from "jsdom";
+import readabilityDefault from "readability";
 
-// We do a dynamic require to ensure it's only imported in Node
-const readabilityImport = require("readability");
-const { Readability } = readabilityImport;
+// Destructure from the default ESM import
+const { Readability } = readabilityDefault;
 
 export function parseContentWithReadability(url: string, html: string): string {
   const dom = new JSDOM(html, { url });

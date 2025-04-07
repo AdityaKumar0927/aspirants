@@ -39,14 +39,14 @@ export const action: ActionFunction = async ({ request }) => {
   }
   const html = await resp.text();
 
-  // SERVER-ONLY parse
+  // parse the text via readability
   const mainText = parseContentWithReadability(url, html);
 
   const completion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
       { role: "system", content: "You are a helpful summarizer." },
-      { role: "user", content: `Summarize the text:\n${mainText}` }
+      { role: "user", content: `Summarize:\n${mainText}` }
     ]
   });
   const summary = completion.choices?.[0]?.message?.content?.trim() ?? "";
@@ -68,7 +68,6 @@ export const action: ActionFunction = async ({ request }) => {
         order_index: orderIndex++
       }
     ]);
-
   if (fragErr) {
     return { error: `Error storing fragments: ${fragErr.message}` };
   }
