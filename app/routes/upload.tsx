@@ -1,6 +1,5 @@
-// app/routes/upload.tsx
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
-import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, useLoaderData, useActionData } from "@remix-run/react";
 import { redirect } from "@remix-run/node";
 import { supabaseAdmin } from "~/utils/supabase.server";
 import { redisClient } from "~/utils/redis.server";
@@ -39,14 +38,14 @@ export const action: ActionFunction = async ({ request }) => {
   }
   const html = await resp.text();
 
-  // parse the text via readability
+  // Use the polyfilled parse function
   const mainText = parseContentWithReadability(url, html);
 
   const completion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
       { role: "system", content: "You are a helpful summarizer." },
-      { role: "user", content: `Summarize:\n${mainText}` }
+      { role: "user", content: `Summarize the text:\n${mainText}` }
     ]
   });
   const summary = completion.choices?.[0]?.message?.content?.trim() ?? "";
@@ -83,9 +82,7 @@ export default function UploadPage() {
   return (
     <div className="min-h-screen p-6 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white">
       <h1 className="text-3xl font-bold mb-4">Upload or Parse a URL</h1>
-      {actionData?.error && (
-        <p className="text-red-500 mb-4">{actionData.error}</p>
-      )}
+      {actionData?.error && <p className="text-red-500 mb-4">{actionData.error}</p>}
       <Form method="post" className="flex flex-col space-y-4 max-w-lg">
         <label className="flex flex-col">
           <span className="mb-1">URL</span>
@@ -107,10 +104,7 @@ export default function UploadPage() {
       <h3 className="text-xl font-semibold mb-2">Recent Uploads</h3>
       <ul className="space-y-2">
         {uploads.map((u: any) => (
-          <li
-            key={u.id}
-            className="border border-gray-300 dark:border-gray-700 p-2 rounded"
-          >
+          <li key={u.id} className="border border-gray-300 dark:border-gray-700 p-2 rounded">
             {u.url || u.file_path}
           </li>
         ))}
