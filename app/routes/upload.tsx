@@ -5,10 +5,7 @@ import { redirect } from "@remix-run/node";
 import { supabaseAdmin } from "~/utils/supabase.server";
 import { redisClient } from "~/utils/redis.server";
 import { openai } from "~/utils/openai.server";
-import { JSDOM } from "jsdom";
-import readabilityImport from "readability";
-
-const { Readability } = readabilityImport;
+import { parseContentWithReadability } from "~/utils/readability.server";
 
 export const loader: LoaderFunction = async () => {
   const { data: uploads } = await supabaseAdmin
@@ -23,9 +20,7 @@ export const loader: LoaderFunction = async () => {
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const url = formData.get("url")?.toString()?.trim();
-  if (!url) {
-    return { error: "No URL provided." };
-  }
+  if (!url) return { error: "No URL provided." };
 
   const { data: upData, error: upErr } = await supabaseAdmin
     .from("user_uploads")
@@ -44,9 +39,8 @@ export const action: ActionFunction = async ({ request }) => {
   }
   const html = await resp.text();
 
-  const dom = new JSDOM(html, { url });
-  const parsed = new Readability(dom.window.document).parse();
-  const mainText = parsed?.textContent || "No content extracted.";
+  // SERVER-ONLY parse
+  const mainText = parseContentWithReadability(url, html);
 
   const completion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
@@ -90,7 +84,9 @@ export default function UploadPage() {
   return (
     <div className="min-h-screen p-6 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white">
       <h1 className="text-3xl font-bold mb-4">Upload or Parse a URL</h1>
-      {actionData?.error && <p className="text-red-500 mb-4">{actionData.error}</p>}
+      {actionData?.error && (
+        <p className="text-red-500 mb-4">{actionData.error}</p>
+      )}
       <Form method="post" className="flex flex-col space-y-4 max-w-lg">
         <label className="flex flex-col">
           <span className="mb-1">URL</span>
@@ -112,7 +108,10 @@ export default function UploadPage() {
       <h3 className="text-xl font-semibold mb-2">Recent Uploads</h3>
       <ul className="space-y-2">
         {uploads.map((u: any) => (
-          <li key={u.id} className="border border-gray-300 dark:border-gray-700 p-2 rounded">
+          <li
+            key={u.id}
+            className="border border-gray-300 dark:border-gray-700 p-2 rounded"
+          >
             {u.url || u.file_path}
           </li>
         ))}
