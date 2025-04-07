@@ -1,0 +1,15 @@
+type Query {
+  healthCheck: String!
+}
+
+type Mutation {
+  generateQuestions(uploadID: ID!): [Question!]!
+}
+
+type Question {
+  id: ID!
+  questionText: String!
+  options: [String!]!
+  correctIndex: Int!
+  answerExplanation: String
+}

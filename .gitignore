@@ -1,5 +1,17 @@
-node_modules
+# Node artifacts
+node_modules/
+build/
+*.log
+.cache/
+*.env
 
-/build
-.env
-.vercel
+# OS / Editor
+.DS_Store
+Thumbs.db
+
+# Dist or production build
+.netlify/
+.vercel/
+
+# Go build artifacts
+go-graphql-service/graph/generated/

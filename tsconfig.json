@@ -1,16 +1,14 @@
 {
-  "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
+    "target": "ES2022",
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "types": ["@vercel/remix", "node", "vite/client"],
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "jsx": "react-jsx",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "resolveJsonModule": true,
-    "target": "ES2022",
+    "jsx": "react-jsx",
     "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
     "allowJs": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -18,8 +16,11 @@
     "paths": {
       "~/*": ["./app/*"]
     },
-
-    // Vite takes care of building everything, not tsc.
     "noEmit": true
-  }
+  },
+  "include": [
+    "./app/**/*.ts",
+    "./app/**/*.tsx",
+    "./remix.env.d.ts"
+  ]
 }
